@@ -1,0 +1,10 @@
+==================================
+| BP  WR  BN  WQ  __  BR  WB  BQ |
+| WK  WP  BB  WN  BK  BP  WR  BN |
+| WQ  __  BR  WB  BQ  WK  WP  BB |
+| WN  BK  BP  WR  BN  WQ  __  BR |
+| WB  BQ  WK  WP  BB  WN  BK  BP |
+| WR  BN  WQ  __  BR  WB  BQ  WK |
+| WP  BB  WN  BK  BP  WR  BN  WQ |
+| __  BR  WB  BQ  WK  WP  BB  WN |
+==================================

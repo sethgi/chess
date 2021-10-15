@@ -1,0 +1,15 @@
+Move was illegal
+Requested Move: (7,6)->(7,4)
+Requested Move Alg: h5+
+Board: 
+==================================
+| BR  BN  BB  BQ  BK  BB  BN  BR |
+| BP  BP  __  BP  BP  __  BP  BP |
+| __  __  BP  __  __  __  __  __ |
+| __  __  __  __  __  __  __  __ |
+| __  WP  __  __  __  BP  __  __ |
+| __  __  __  __  __  __  __  __ |
+| WP  __  WP  WP  WP  WP  WP  WP |
+| WR  WN  WB  WQ  WK  WB  WN  WR |
+==================================
+Castle: WK WQ BK BQ

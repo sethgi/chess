@@ -1,0 +1,7 @@
+build/
+*.out\.*
+*.svg
+*.dot
+vgcore*
+todo.txt
+
