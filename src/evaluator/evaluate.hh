@@ -6,6 +6,7 @@
 #include "board/board.hh"
 #include "board/board_utils.hh"
 #include "move_generator/move_generator.hh"
+#include "search/cache.hh"
 
 namespace chess {
 
@@ -48,7 +49,11 @@ struct Evaluation {
 class Evaluator {
 
  public:
-  Evaluator(const Board& b): board_(b), move_gen_{b} {}
+  Evaluator(const Board& b): board_(b), move_gen_{b}
+  {}
+
+  Evaluator(const Board& b, CachePtr cache): board_(b), move_gen_{b}, cache_(cache)
+  {}
   
   Evaluation operator()(Color color){
 
@@ -96,7 +101,6 @@ class Evaluator {
     result.value = value;
 
     const uint8_t king_only = 0b1 << PieceType::KING;
-
       
     // std::cerr << "white has" << fmt::format("{:b}",(size_t)white_has) << std::endl;
     // std::cerr << "black has" << fmt::format("{:b}",(size_t)black_has) << std::endl;
@@ -155,17 +159,18 @@ class Evaluator {
  private:
   // If this player is IN checkmate (NOT applying)
   bool isCheckmate(Color color) {
-    if(hasLegalMoves(color)) return false;
-
-    return board_.inCheck(color);
+    if(!board_.inCheck(color)) return false;
+    
+    return !hasLegalMoves(color);
   }
 
   bool hasLegalMoves(Color color) {
-    return !move_gen_.getMovesForPlayer(color).empty();
+    return !move_gen_.getMovesForPlayer(color, cache_).empty();
   };
 
   const Board& board_;
   const MoveGenerator move_gen_;
+  CachePtr cache_{nullptr};
 
 };
 

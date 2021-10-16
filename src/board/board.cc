@@ -4,10 +4,11 @@
 
 #include "board/board.hh"
 #include "board/board_utils.hh"
+#include "search/cache.hh"
 
 // Comment out all but one of these
-#define USE_HASH_DJB2
-// #define USE_HASH_SDBM
+// #define USE_HASH_DJB2
+#define USE_HASH_SDBM
 
 namespace chess {
 
@@ -153,17 +154,40 @@ void Board::writeToFile(const std::string& fname) {
   output.close();
 }
 
-bool Board::inCheck(const Color color) const {
-  uint8_t file, rank;
-  for(uint8_t f = 0; f < kBoardDim; ++f) {
-    for(uint8_t r = 0; r < kBoardDim; ++r) {
-      if (getPieceAt(f, r) == buildPiece(PieceType::KING, color)) {
-        file = f;
-        rank = r;
-      }
+bool Board::inCheck(const Color color, CachePtr cache) const {
+  bool result;
+  /* caching literally made it slower
+  if(cache) {
+    if(cache->getInCheck(*this, color, &result)) {
+      return result;
     }
   }
-  return posAttacked(file, rank, color);
+  */
+  uint8_t file, rank;
+  Piece king_piece = buildPiece(PieceType::KING, color);
+  bool found = false;
+  for(uint8_t f = 0; f < kBoardDim; ++f) {
+    for(uint8_t r = 0; r < kBoardDim; ++r) {
+      if (getPieceAt(f, r) == king_piece) {
+        file = f;
+        rank = r;
+        found = true;
+        break;
+      }
+    }
+    if(found) break;
+  }
+  result = posAttacked(file, rank, color);
+  /*
+  if(cache) {
+    cache->insert(*this, color, result);
+  }
+  */
+  return result;
+}
+
+bool Board::inCheck(const Color color) const {
+  return inCheck(color, cache_);
 }
 
 #define ADD_OR_RETURN(file, rank)  {\
@@ -332,6 +356,9 @@ bool Board::posAttacked(uint8_t file, uint8_t rank, const Color color,
 #undef ADD_OR_RETURN
 
 bool Board::doMove(Move move, Color color, Board* result, int* cap_value) {
+  return doMove(move, color, {}, result, cap_value);
+}
+bool Board::doMove(Move move, Color color, CachePtr cache, Board* result, int* cap_value) {
   Board tmp_board = *this;
 
   bool just_castled = false;
@@ -390,7 +417,7 @@ bool Board::doMove(Move move, Color color, Board* result, int* cap_value) {
     tmp_board.special_move_flags_ = tmp_board.special_move_flags_ & 0x0F;
   }
 
-  if(tmp_board.inCheck(color)) {
+  if(tmp_board.inCheck(color, cache)) {
     return false;
   }
 
@@ -638,7 +665,7 @@ size_t Board::computeDJB2Hash() const {
   size_t hash = 5381;
 
   #pragma unroll
-  for(int i = 0; i < 64; ++i) {
+  for(int i = 0; i < kNumBytes; ++i) {
     hash = ((hash << 5) + hash) + data_[i]; // hash * 33 + c
   }
 
@@ -654,11 +681,12 @@ size_t Board::computeSDBMHash() const {
   size_t hash = 0;
   
   #pragma unroll
-  for(int i = 0; i < 64; ++i) {
+  for(int i = 0; i < kNumBytes; ++i) {
     hash = data_[i] + (hash << 6) + (hash << 16) - hash;
   }
 
   hash = special_move_flags_ + (hash << 6) + (hash << 16) - hash;
+
   return hash;
 }
 

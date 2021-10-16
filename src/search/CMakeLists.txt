@@ -8,4 +8,7 @@ target_link_libraries(search
   move_selection
   ${Boost_LIBRARIES})
 
-
+add_library(cache
+  cache.hh
+  cache.cc
+)

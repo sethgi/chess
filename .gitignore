@@ -2,6 +2,7 @@ build/
 *.out\.*
 *.svg
 *.dot
-vgcore*
+*vgcore*
 todo.txt
+out/
 

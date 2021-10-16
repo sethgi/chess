@@ -1,14 +1,15 @@
 #pragma once
 
-#include "board/board.hh"
 #include <vector>
 #include <string>
 #include <chrono>
 #include <unordered_map>
 #include <array>
 
-namespace chess {
+#include "search/cache_fwd.hh"
+#include "board/board.hh"
 
+namespace chess {
 
 struct Node {
   
@@ -29,6 +30,15 @@ struct Node {
     player(p),
     last_move(m)
   {}
+
+  
+  bool operator==(const Node& other) {
+    return board == other.board && player == other.player;
+  }
+
+  bool operator!=(const Node& other) {
+    return !(*this == other);
+  }
 
   void printStats() {
     fmt::print("Tree Size: {} Nodes\n", treeSize());
@@ -60,7 +70,7 @@ struct Node {
     return count;
   }
 
-  using TimeMap = std::unordered_map<size_t, size_t>;
+  using TimeMap = std::unordered_map<size_t, std::pair<Node,size_t>>;
 
   void compareHashes();
 
@@ -91,9 +101,10 @@ class MCTS {
   float defaultPolicy(Node* n);
 
   void backPropagate(Node* n, const float value);
-
+  
  private:
   int time_limit_ms_;
+  CachePtr cache_;
 };
 
 

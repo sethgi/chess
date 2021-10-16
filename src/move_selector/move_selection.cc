@@ -15,7 +15,7 @@ MoveSelection::MoveSelection(const Board& board):
 }
 
 bool MoveSelection::getMoveForPlayer(Color player, Move* move) {
-  auto moves = move_gen_.getMovesForPlayer(player);
+  auto moves = move_gen_.getMovesForPlayer(player, cache_);
 
   std::vector<float> weights;
   weights.assign(moves.size(), 1);

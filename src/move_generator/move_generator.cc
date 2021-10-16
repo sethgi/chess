@@ -62,7 +62,17 @@ MoveList MoveGenerator::getMovesForPiece(uint8_t file, uint8_t rank) const
 }
 
 MoveList MoveGenerator::getMovesForPlayer(Color color) const {
+  return getMovesForPlayer(color, cache_);
+}
+
+MoveList MoveGenerator::getMovesForPlayer(Color color, CachePtr cache) const {
+
   MoveList result;
+  
+  if(cache && cache->getMoveList(board_, color, &result)) {
+    return result;
+  }
+
   for(int file = 0; file < kBoardDim; ++file) {
     for(int rank = 0; rank < kBoardDim; ++rank) {
       if(!board_.isColor(file, rank, color)) continue;
@@ -116,19 +126,24 @@ MoveList MoveGenerator::getMovesForPlayer(Color color) const {
     
   }
   
-  return filterLegalMoves(result, color);
+  auto to_return = filterLegalMoves(result, color, cache);
+  if(cache) {
+    cache->insert(board_, color, to_return);
+  }
+  return to_return;
 }
 
-MoveList MoveGenerator::filterLegalMoves(MoveList& in_list, Color color) const {
+MoveList MoveGenerator::filterLegalMoves(MoveList& in_list, Color color, CachePtr cache) const {
   auto is_illegal = [&](Move& m) {
     Board temp_board = board_;
-    return !temp_board.doMove(m, color);
+    return !temp_board.doMove(m, color, cache);
   };
 
   auto new_end = std::remove_if(in_list.begin(), in_list.end(), is_illegal);
   in_list.erase(new_end, in_list.end());
   return in_list;
 }
+
 MoveList MoveGenerator::getMovesForPawn(uint8_t file, uint8_t rank, Color color) const {
   int8_t dir, double_rank, promote_rank, ep_rank;
 

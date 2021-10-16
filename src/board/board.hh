@@ -9,6 +9,8 @@
 #include <fmt/format.h>
 #include <unordered_map>
 
+#include "search/cache_fwd.hh"
+
 // file inc, rank inc
 using Directions = std::vector<std::pair<int8_t, int8_t>>;
 
@@ -166,6 +168,14 @@ public:
   bool isColor(uint8_t file, uint8_t rank, const Color color) const;
   bool isOtherColor(uint8_t file, uint8_t rank, const Color color) const;
   
+  bool operator==(const Board& other) const {
+    return data_ == other.data_ && special_move_flags_ == other.special_move_flags_;
+  }
+
+  bool operator!=(const Board& other) const {
+    return !(*this == other);
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const Board& b){
     return os << b.formatBoard() << std::endl;
   }
@@ -173,6 +183,7 @@ public:
   // If attacked_by is set, only look for that type. Else, check all
   // if attacking_pieces isn't nullptr, return a vec of the pieces which attack the square
   bool inCheck(const Color color) const;
+  bool inCheck(const Color color, CachePtr cache) const;
 
   // If is_enemy is true, then we're building adversarial moves for the bad guy checking
   // where they can attack. If it's false, we're building moves for good guy and looking for 
@@ -185,6 +196,7 @@ public:
   // if result is nullptr, update this instance. Otherwise, return a new board
   // Precond: The move makes sense. Basically, it's legal except for check. 
   // cap_value of whatever piece gets captured (only used if set)
+  bool doMove(Move move, Color color, CachePtr cache, Board* result = nullptr, int* cap_value = nullptr);
   bool doMove(Move move, Color color, Board* result = nullptr, int* cap_value = nullptr);
 
   std::string moveToAlgebraicNotation(const Move m) const;
@@ -199,7 +211,10 @@ public:
   size_t computeSDBMHash() const;
   size_t computeDJB2Hash() const;
 
+  void SetCache(CachePtr cache) { cache_ = cache; }
+
   uint8_t special_move_flags_{0x0F};
+
 private:
 
   // List of locations of all the matching pieces that can reach the given square.
@@ -208,6 +223,8 @@ private:
   
   // Column-major. 0,0 is A1, etc. 
   std::array<uint8_t, kNumBytes> data_;
+
+  CachePtr cache_{nullptr};
 };
 
 }; // namespace chess
